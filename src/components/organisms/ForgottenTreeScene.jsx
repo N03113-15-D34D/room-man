@@ -1,108 +1,135 @@
-﻿export function ForgottenTreeScene({ isPeeking, manGone, onTreeClick }) {
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
+import { ROOM_STATES } from '../../utils/constants';
+
+// Coordenadas exactas del suelo púrpura dentro del viewBox (230 x 185)
+function isWalkable(x, y) {
+  // Claro superior alrededor del árbol (x: 64..158, y: 42..104)
+  const inClearing =
+    x >= 64 && x <= 158 &&
+    y >= 42 && y <= 104;
+
+  // Pasillo vertical inferior (x: 98..122, y: 100..168)
+  const inCorridor =
+    x >= 98 && x <= 122 &&
+    y >= 100 && y <= 168;
+
+  // Base del tronco del árbol (para no atravesarlo por encima)
+  const hitsTrunk =
+    x >= 102 && x <= 126 &&
+    y >= 74 && y <= 92;
+
+  return (inClearing || inCorridor) && !hitsTrunk;
+}
+
+export function ForgottenTreeScene({ step, onInteract }) {
+  const [pos, setPos] = useState({ x: 110, y: 145 });
+  const [dir, setDir] = useState('up');
+  const [walkFrame, setWalkFrame] = useState(0);
+
+  const showManSilhouette =
+    step === ROOM_STATES.BEHIND_TREE || step === ROOM_STATES.OFFERING;
+
+  const krisSprites = useMemo(() => ({
+    up: ['/krisA1.png', '/krisA2.png', '/krisA1.png', '/krisA3.png'],
+    down: ['/kris1.png', '/kris2.png', '/kris1.png', '/kris3.png'],
+    left: ['/krisL1.png', '/krisL2.png', '/krisL1.png', '/KrisL3.png'],
+    right: ['/krisD1.png', '/KrisD2.png', '/krisD1.png', '/KrisD3.png'],
+  }), []);
+
+  const moveKris = useCallback((dx, dy, nextDir) => {
+    setDir(nextDir);
+    setWalkFrame((f) => (f + 1) % 4);
+    setPos((prev) => {
+      const nx = prev.x + dx;
+      const ny = prev.y + dy;
+      return isWalkable(nx, ny) ? { x: nx, y: ny } : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const key = e.key.toLowerCase();
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+        e.preventDefault();
+      }
+      if (key === 'arrowup' || key === 'w') moveKris(0, -4, 'up');
+      else if (key === 'arrowdown' || key === 's') moveKris(0, 4, 'down');
+      else if (key === 'arrowleft' || key === 'a') moveKris(-4, 0, 'left');
+      else if (key === 'arrowright' || key === 'd') moveKris(4, 0, 'right');
+      else if (key === 'z' || key === 'enter') onInteract();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [moveKris, onInteract]);
+
   return (
-    <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 w-100 position-relative">
-      <button
-        type="button"
-        className="btn btn-link border-0 p-0 text-decoration-none"
-        onClick={onTreeClick}
-        title="Examinar el árbol"
-        aria-label="Habitación del árbol en Deltarune"
+    <div className="d-flex flex-column align-items-center w-100 my-2">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onInteract}
+        aria-label="Habitación del árbol"
+        className="position-relative bg-black overflow-hidden user-select-none"
+        style={{ width: '460px', height: '370px', cursor: 'pointer' }}
       >
         <svg
-          width="360"
-          height="320"
-          viewBox="0 0 240 215"
-          style={{ imageRendering: 'pixelated' }}
-          aria-hidden="true"
+          width="460"
+          height="370"
+          viewBox="0 0 230 185"
+          shapeRendering="crispEdges"
+          className="w-100 h-100 d-block"
         >
-          {/* Plataforma morada de la habitación (Egg_room) */}
-          <rect x="82" y="42" width="76" height="14" fill="#5c285c" />
-          <rect x="64" y="56" width="112" height="58" fill="#5c285c" />
-          <rect x="82" y="114" width="76" height="16" fill="#5c285c" />
-          {/* Camino vertical inferior */}
-          <rect x="102" y="130" width="36" height="85" fill="#5c285c" />
+          <rect width="230" height="185" fill="#000000" />
+          <g fill="#5b285c">
+            <rect x="76" y="34" width="76" height="14" />
+            <rect x="60" y="48" width="102" height="36" />
+            <rect x="60" y="84" width="96" height="12" />
+            <rect x="74" y="96" width="76" height="12" />
+            <rect x="94" y="108" width="32" height="62" />
+          </g>
 
-          {/* Silueta del Hombre detrás del árbol */}
-          {!manGone && (
-            <g
-              style={{
-                transform: isPeeking ? 'translateX(14px)' : 'translateX(0px)',
-                transition: 'transform 0.35s steps(4)',
-              }}
-            >
-              <rect x="128" y="84" width="8" height="8" fill="#d8d8e8" />
-              <rect x="127" y="92" width="10" height="18" fill="#8b8ba3" />
-              <rect x="133" y="87" width="2" height="2" fill="#000000" />
+          {showManSilhouette && (
+            <g>
+              <rect x="136" y="66" width="10" height="22" fill="#180d24" />
+              <rect x="138" y="59" width="6" height="7" fill="#231433" />
             </g>
           )}
-
-          {/* Tronco retorcido con contorno magenta y raíces (Man_overworld_tree) */}
-          <g>
-            {/* Contorno magenta del tronco y raíces */}
-            <path
-              fill="#b8007a"
-              d="M118 76h12v10h12v-4h16v3h-12v7h-14v8h-16v4h-6v8h12v3H88v-3h8v-6h6v-9h12v-7h4V76z"
-            />
-            {/* Relleno oscuro del tronco */}
-            <path
-              fill="#181425"
-              d="M120 77h8v10h14v-4h12v1h-10v7h-14v8h-16v4h-6v8h10v2H90v-2h8v-6h6v-9h12v-7h4V77z"
-            />
-            {/* Detalles de raíces */}
-            <rect x="96" y="111" width="2" height="4" fill="#b8007a" />
-            <rect x="102" y="109" width="2" height="6" fill="#b8007a" />
-            <rect x="108" y="110" width="2" height="5" fill="#b8007a" />
-            <rect x="114" y="111" width="2" height="4" fill="#b8007a" />
-          </g>
-
-          {/* Copa del árbol (bloques redondeados fieles al sprite) */}
-          {/* Capa púrpura oscuro (#8f0066) */}
-          <rect x="86" y="34" width="28" height="24" rx="4" fill="#8f0066" />
-          <rect x="78" y="48" width="38" height="28" rx="4" fill="#8f0066" />
-          <rect x="116" y="64" width="46" height="16" rx="4" fill="#8f0066" />
-          <rect x="148" y="56" width="24" height="18" rx="4" fill="#8f0066" />
-
-          {/* Capa rojo carmesí brillante (#e61938) */}
-          <rect x="134" y="16" width="22" height="10" rx="3" fill="#e61938" />
-          <rect x="120" y="24" width="22" height="10" rx="3" fill="#e61938" />
-          <rect x="94" y="26" width="22" height="12" rx="3" fill="#e61938" />
-          <rect x="90" y="34" width="74" height="14" rx="4" fill="#e61938" />
-          <rect x="112" y="42" width="70" height="22" rx="4" fill="#e61938" />
-          <rect x="112" y="54" width="42" height="16" rx="4" fill="#e61938" />
-          <rect x="68" y="48" width="22" height="8" rx="3" fill="#e61938" />
-          <rect x="96" y="68" width="24" height="12" rx="3" fill="#e61938" />
-          <rect x="114" y="76" width="18" height="12" rx="3" fill="#e61938" />
-
-          {/* Manchas interiores magenta (#b8007a) */}
-          <rect x="126" y="35" width="18" height="8" rx="3" fill="#b8007a" />
-          <rect x="82" y="54" width="16" height="7" rx="3" fill="#b8007a" />
-          <rect x="103" y="57" width="12" height="10" rx="3" fill="#b8007a" />
-          <rect x="158" y="61" width="20" height="9" rx="3" fill="#b8007a" />
-
-          {/* Kris de espaldas en el camino */}
-          <g transform="translate(111, 152)">
-            {/* Cabello oscuro */}
-            <rect x="3" y="0" width="12" height="11" fill="#0d0b1a" />
-            <rect x="2" y="2" width="14" height="8" fill="#0d0b1a" />
-            <rect x="4" y="11" width="10" height="2" fill="#0d0b1a" />
-            {/* Bufanda rosa/morada y hombrera plateada */}
-            <rect x="2" y="12" width="4" height="4" fill="#a8d8ea" />
-            <rect x="6" y="12" width="9" height="3" fill="#b565a7" />
-            <rect x="13" y="14" width="4" height="4" fill="#b565a7" />
-            {/* Capa y armadura */}
-            <rect x="3" y="15" width="12" height="6" fill="#3a506b" />
-            <rect x="5" y="15" width="8" height="5" fill="#70a1d7" />
-            {/* Guantes y pantalones oscuros */}
-            <rect x="1" y="18" width="2" height="3" fill="#a8d8ea" />
-            <rect x="15" y="18" width="2" height="3" fill="#a8d8ea" />
-            <rect x="4" y="21" width="4" height="5" fill="#0d0b1a" />
-            <rect x="10" y="21" width="4" height="5" fill="#0d0b1a" />
-            {/* Botas */}
-            <rect x="3" y="26" width="5" height="3" fill="#70a1d7" />
-            <rect x="10" y="26" width="5" height="3" fill="#70a1d7" />
-          </g>
         </svg>
-      </button>
+
+        <img
+          src={krisSprites[dir][walkFrame]}
+          alt={`Kris caminando ${dir}`}
+          className="position-absolute"
+          style={{
+            width: '26px',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            left: `${pos.x * 2}px`,
+            top: `${pos.y * 2}px`,
+            transform: 'translate(-50%, -85%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        <img
+          src="/forgottentree.png"
+          alt="Árbol carmesí de room_man"
+          className="position-absolute top-0 start-50 translate-middle-x mt-3"
+          style={{
+            width: '185px',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            pointerEvents: 'none'
+          }}
+        />
+      </div>
+
+      <div className="d-flex align-items-center gap-2 mt-2 font-monospace small text-secondary">
+        <span>Mover: Flechas / WASD</span>
+        <span>|</span>
+        <span>Interactuar: Z / Enter / Clic</span>
+      </div>
     </div>
   );
 }

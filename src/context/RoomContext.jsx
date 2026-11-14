@@ -1,45 +1,49 @@
 ﻿import { createContext, useContext, useState } from 'react';
-import { getDialogueNode, getInitialNodeId } from '../services/dialogueService';
+import dialogue from '../data/dialogue.json';
+import { ROOM_STATES } from '../utils/constants';
+import { storageService } from '../services/storageService';
 
 const RoomContext = createContext(null);
 
 export function RoomProvider({ children }) {
-  const [currentId, setCurrentId] = useState(getInitialNodeId());
-  const [hasEgg, setHasEgg] = useState(false);
-  const [manGone, setManGone] = useState(false);
+  const [eggCount, setEggCount] = useState(() => storageService.getEggCount());
+  const [step, setStep] = useState(ROOM_STATES.IDLE);
+  const [currentDialogue, setCurrentDialogue] = useState(dialogue.initial);
 
-  const currentNode = getDialogueNode(currentId);
-
-  const selectOption = (option) => {
-    if (option.reset) {
-      setHasEgg(false);
-      setManGone(false);
-      setCurrentId(getInitialNodeId());
-      return;
+  const interactWithTree = () => {
+    if (step === ROOM_STATES.IDLE) {
+      setStep(ROOM_STATES.BEHIND_TREE);
+      setCurrentDialogue(dialogue.behindPrompt);
+    } else if (step === ROOM_STATES.BEHIND_TREE) {
+      setStep(ROOM_STATES.OFFERING);
+      setCurrentDialogue(dialogue.offerEgg);
+    } else if (step === ROOM_STATES.OFFERING) {
+      setStep(ROOM_STATES.EGG_RECEIVED);
+      const nextCount = eggCount + 1;
+      setEggCount(nextCount);
+      storageService.setEggCount(nextCount);
+      setCurrentDialogue(dialogue.receivedEgg);
+    } else if (step === ROOM_STATES.EGG_RECEIVED) {
+      setStep(ROOM_STATES.EMPTY);
+      setCurrentDialogue(dialogue.afterEgg);
+    } else {
+      setStep(ROOM_STATES.IDLE);
+      setCurrentDialogue(dialogue.initial);
     }
-    const nextNode = getDialogueNode(option.next);
-    if (nextNode.giveEgg) setHasEgg(true);
-    if (nextNode.manGone) setManGone(true);
-    setCurrentId(nextNode.id);
   };
 
-  const peekBehindTree = () => {
-    if (currentId === 'start' && !manGone) {
-      setCurrentId('behind_tree');
-      return true;
-    }
-    return false;
+  const resetRoom = () => {
+    storageService.reset();
+    setEggCount(0);
+    setStep(ROOM_STATES.IDLE);
+    setCurrentDialogue(dialogue.initial);
   };
 
   return (
-    <RoomContext.Provider value={{ currentId, currentNode, hasEgg, manGone, selectOption, peekBehindTree }}>
+    <RoomContext.Provider value={{ eggCount, step, currentDialogue, interactWithTree, resetRoom }}>
       {children}
     </RoomContext.Provider>
   );
 }
 
-export function useRoom() {
-  const context = useContext(RoomContext);
-  if (!context) throw new Error('useRoom debe usarse dentro de RoomProvider');
-  return context;
-}
+export const useRoom = () => useContext(RoomContext);

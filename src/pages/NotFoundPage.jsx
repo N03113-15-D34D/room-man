@@ -5,18 +5,9 @@ export function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
-    <main className="container-fluid bg-black text-white vh-100 d-flex flex-column justify-content-center align-items-center p-4">
-      <div className="card bg-black text-white border border-4 border-white rounded-0 p-4 text-center w-100" style={{ maxWidth: '540px' }}>
-        <h1 className="fs-3 text-danger mb-3" style={{ fontFamily: "'Press Start 2P', monospace" }}>
-          404 // VACÍO
-        </h1>
-        <p className="fs-4 text-white mb-4" style={{ fontFamily: "'VT323', monospace" }}>
-          * No hay ningún árbol aquí. Solo oscuridad.
-        </p>
-        <div className="d-flex justify-content-center">
-          <RetroButton label="Volver al inicio" onClick={() => navigate('/')} />
-        </div>
-      </div>
-    </main>
+    <div className="min-vh-100 bg-black text-white font-monospace d-flex flex-column justify-content-center align-items-center text-center p-4">
+      <h1 className="h3 mb-3">* Esta habitación no existe.</h1>
+      <RetroButton onClick={() => navigate('/')}>VOLVER AL INICIO</RetroButton>
+    </div>
   );
 }

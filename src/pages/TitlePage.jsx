@@ -5,21 +5,15 @@ export function TitlePage() {
   const navigate = useNavigate();
 
   return (
-    <main className="container-fluid bg-black text-white vh-100 d-flex flex-column justify-content-center align-items-center p-4">
-      <div className="card bg-black text-white border border-4 border-white rounded-0 p-4 text-center w-100" style={{ maxWidth: '580px' }}>
-        <p className="text-secondary text-uppercase mb-2" style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '0.65rem' }}>
-          UN ENCUENTRO ENTRE HABITACIONES
-        </p>
-        <h1 className="fs-2 text-white mb-4" style={{ fontFamily: "'Press Start 2P', monospace", lineHeight: '1.5' }}>
-          THE FORGOTTEN MAN&apos;S TREE
-        </h1>
-        <p className="fs-4 text-light mb-4" style={{ fontFamily: "'VT323', monospace" }}>
-          * Hay un árbol carmesí esperando en algún lugar donde no debería haber nada.
-        </p>
-        <div className="d-flex justify-content-center">
-          <RetroButton label="Entrar a la habitación" onClick={() => navigate('/room-man')} />
-        </div>
-      </div>
-    </main>
+    <div className="min-vh-100 bg-black text-white font-monospace d-flex flex-column justify-content-center align-items-center text-center p-4">
+      <p className="text-danger small mb-2">DELTARUNE // ROOM_MAN</p>
+      <h1 className="display-6 fw-bold mb-3">THE FORGOTTEN MAN&apos;S TREE</h1>
+      <p className="text-secondary mb-4" style={{ maxWidth: '460px' }}>
+        Entre habitaciones que no deberían existir, un árbol carmesí aguarda en silencio.
+      </p>
+      <RetroButton onClick={() => navigate('/room')}>
+        ENTRAR A LA HABITACIÓN
+      </RetroButton>
+    </div>
   );
 }

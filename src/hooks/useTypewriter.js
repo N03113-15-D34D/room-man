@@ -1,38 +1,32 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect } from 'react';
 
-export function useTypewriter(text, speed = 32, onCharacter) {
-  const [displayedText, setDisplayedText] = useState('');
+export function useTypewriter(text, speed = 30, onChar) {
+  const [displayed, setDisplayed] = useState('');
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
-    setDisplayedText('');
+    setDisplayed('');
     setIsDone(false);
     if (!text) return;
 
-    let index = 0;
+    let idx = 0;
     const interval = setInterval(() => {
-      index += 1;
-      const nextSlice = text.slice(0, index);
-      setDisplayedText(nextSlice);
-
-      const currentChar = text[index - 1];
-      if (currentChar && currentChar !== ' ' && currentChar !== '*' && onCharacter) {
-        onCharacter();
-      }
-
-      if (index >= text.length) {
+      idx += 1;
+      setDisplayed(text.slice(0, idx));
+      if (onChar && text[idx - 1] !== ' ') onChar();
+      if (idx >= text.length) {
         clearInterval(interval);
         setIsDone(true);
       }
     }, speed);
 
     return () => clearInterval(interval);
-  }, [text, speed, onCharacter]);
+  }, [text, speed, onChar]);
 
-  const skip = useCallback(() => {
-    setDisplayedText(text);
+  const skip = () => {
+    setDisplayed(text);
     setIsDone(true);
-  }, [text]);
+  };
 
-  return { displayedText, isDone, skip };
+  return { displayed, isDone, skip };
 }

@@ -1,83 +1,69 @@
-﻿import { useRef, useState, useCallback, useEffect } from 'react';
-import { triggerRetroTone } from '../utils/audioUtils';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 
 export function useAudioSynth() {
-  const audioCtxRef = useRef(null);
+  const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(false);
+  const ctxRef = useRef(null);
   const bgmRef = useRef(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isPlayingBgm, setIsPlayingBgm] = useState(false);
-
-  const initAudioContext = useCallback(() => {
-    if (!audioCtxRef.current) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtxRef.current = new AudioContext();
-    }
-    if (audioCtxRef.current.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-  }, []);
 
   useEffect(() => {
-    const audio = new Audio('/audio/man.mp3');
+    mutedRef.current = muted;
+    if (!bgmRef.current) return;
+    if (muted) {
+      bgmRef.current.pause();
+    } else {
+      bgmRef.current.play().catch(() => {});
+    }
+  }, [muted]);
+
+  useEffect(() => {
+    const audio = new Audio('/man.mp3');
     audio.loop = true;
-    audio.volume = 0.45;
+    audio.volume = 0.5;
     bgmRef.current = audio;
 
+    const tryPlay = () => {
+      if (!mutedRef.current && bgmRef.current && bgmRef.current.paused) {
+        bgmRef.current.play().catch(() => {});
+      }
+    };
+
+    tryPlay();
+    window.addEventListener('keydown', tryPlay);
+    window.addEventListener('pointerdown', tryPlay);
+
     return () => {
+      window.removeEventListener('keydown', tryPlay);
+      window.removeEventListener('pointerdown', tryPlay);
       audio.pause();
       audio.src = '';
     };
   }, []);
 
-  const startBgm = useCallback(() => {
-    initAudioContext();
-    if (bgmRef.current && !isPlayingBgm) {
-      bgmRef.current
-        .play()
-        .then(() => setIsPlayingBgm(true))
-        .catch(() => {});
+  const playBlip = useCallback((freq = 440, duration = 0.05) => {
+    if (mutedRef.current) return;
+    try {
+      if (!ctxRef.current) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        ctxRef.current = new AudioCtx();
+      }
+      const ctx = ctxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch {
+      // Ignora bloqueo antes de interacción
     }
-  }, [initAudioContext, isPlayingBgm]);
+  }, []);
 
-  const toggleMute = useCallback(() => {
-    initAudioContext();
-    setIsMuted((prev) => {
-      const nextMuted = !prev;
-      if (bgmRef.current) {
-        bgmRef.current.muted = nextMuted;
-        if (!nextMuted && !isPlayingBgm) {
-          bgmRef.current
-            .play()
-            .then(() => setIsPlayingBgm(true))
-            .catch(() => {});
-        }
-      }
-      return nextMuted;
-    });
-  }, [initAudioContext, isPlayingBgm]);
+  const toggleMute = () => setMuted((prev) => !prev);
 
-  const playBlip = useCallback(
-    (voice = 'narrator') => {
-      if (isMuted) return;
-      initAudioContext();
-      const ctx = audioCtxRef.current;
-
-      if (voice === 'man') {
-        triggerRetroTone(ctx, { type: 'triangle', startFreq: 190 + Math.random() * 25, duration: 0.045, volume: 0.06 });
-      } else if (voice === 'item') {
-        triggerRetroTone(ctx, { type: 'square', startFreq: 520, endFreq: 780, duration: 0.08, volume: 0.06 });
-      } else {
-        triggerRetroTone(ctx, { type: 'square', startFreq: 320 + Math.random() * 20, duration: 0.045, volume: 0.06 });
-      }
-    },
-    [isMuted, initAudioContext]
-  );
-
-  const playSelect = useCallback(() => {
-    if (isMuted) return;
-    initAudioContext();
-    triggerRetroTone(audioCtxRef.current, { type: 'square', startFreq: 440, endFreq: 660, duration: 0.09, volume: 0.07 });
-  }, [isMuted, initAudioContext]);
-
-  return { isMuted, isPlayingBgm, startBgm, toggleMute, playBlip, playSelect };
+  return { muted, toggleMute, playBlip };
 }

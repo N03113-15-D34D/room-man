@@ -1,17 +1,11 @@
-export function RoomTemplate({ hud, scene, dialogue, onFirstInteraction }) {
+﻿export function RoomTemplate({ hud, scene, dialogue }) {
   return (
-    <main
-      className="container-fluid bg-black text-white vh-100 d-flex justify-content-center align-items-center p-3"
-      onClick={onFirstInteraction}
-    >
-      <div
-        className="container h-100 d-flex flex-column align-items-center justify-content-between pb-2"
-        style={{ maxWidth: '820px' }}
-      >
-        {hud}
+    <div className="min-vh-100 bg-black text-white d-flex flex-column justify-content-between">
+      {hud}
+      <main className="container d-flex flex-column align-items-center justify-content-center flex-grow-1 py-3" style={{ maxWidth: '680px' }}>
         {scene}
         {dialogue}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

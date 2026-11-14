@@ -1,0 +1,70 @@
+{
+  "start": {
+    "id": "start",
+    "speaker": "Narrador",
+    "voice": "narrator",
+    "text": "* Hay un árbol carmesí en medio de la nada. Sientes que hay alguien detrás de él.",
+    "options": [
+      { "label": "Mirar detrás del árbol", "next": "behind_tree" },
+      { "label": "Examinar las hojas", "next": "inspect_leaves" }
+    ]
+  },
+  "inspect_leaves": {
+    "id": "inspect_leaves",
+    "speaker": "Narrador",
+    "voice": "narrator",
+    "text": "* Las hojas son de un rojo profundo, casi como si estuvieran pintadas en un lienzo olvidado.",
+    "options": [
+      { "label": "Mirar detrás del árbol", "next": "behind_tree" }
+    ]
+  },
+  "behind_tree": {
+    "id": "behind_tree",
+    "speaker": "???",
+    "voice": "man",
+    "text": "* Hay un hombre aquí. Puede que esté feliz de verte.",
+    "options": [
+      { "label": "Extender la mano", "next": "receive_egg" },
+      { "label": "Preguntar quién es", "next": "who_are_you" }
+    ]
+  },
+  "who_are_you": {
+    "id": "who_are_you",
+    "speaker": "???",
+    "voice": "man",
+    "text": "* ... * (El hombre permanece en silencio detrás del tronco, pero parece ofrecerte algo).",
+    "options": [
+      { "label": "Aceptar el objeto", "next": "receive_egg" },
+      { "label": "Retroceder", "next": "leave_early" }
+    ]
+  },
+  "receive_egg": {
+    "id": "receive_egg",
+    "speaker": "Narrador",
+    "voice": "item",
+    "text": "* Recibiste un Huevo.",
+    "giveEgg": true,
+    "options": [
+      { "label": "Volver a mirar detrás del árbol", "next": "empty_tree" }
+    ]
+  },
+  "leave_early": {
+    "id": "leave_early",
+    "speaker": "Narrador",
+    "voice": "narrator",
+    "text": "* Decides no acercarte demasiado. El silencio vuelve a llenar la habitación.",
+    "options": [
+      { "label": "Acercarse de nuevo", "next": "behind_tree" }
+    ]
+  },
+  "empty_tree": {
+    "id": "empty_tree",
+    "speaker": "Narrador",
+    "voice": "narrator",
+    "text": "* Miras detrás del árbol. Ya no hay nadie allí.",
+    "manGone": true,
+    "options": [
+      { "label": "Reiniciar habitación", "next": "start", "reset": true }
+    ]
+  }
+}

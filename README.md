@@ -61,3 +61,5 @@ src/
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia **MIT** — consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+o usan eso 
